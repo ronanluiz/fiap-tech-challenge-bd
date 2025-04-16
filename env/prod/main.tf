@@ -1,9 +1,9 @@
 module "prod" {
   source          = "../.."
-  environment     = "prod"
-   database_name = "techchallange_bd_dev"
+  ambiente        = "prod"
+  nome_banco_dados = "techchallange_bd_prod"
 }
 
-# output "alb_techchallenge_ip" {
-#   value = module.prod.alb_dns_name
-# }
+output "endpoint_bd_prod" {
+  value = module.prod.endpoint_bd
+}

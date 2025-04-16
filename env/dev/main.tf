@@ -1,9 +1,20 @@
 module "dev" {
   source          = "../.."
-  environment     = "dev"
-  database_name = "techchallange_bd_dev"
+  ambiente        = "dev"
+  nome_bd = "techchallenge"
+  nome_servidor_bd = "fiap-soat10"
+  bd_senha = var.bd_usuario
+  bd_usuario = var.bd_senha
 }
 
-# output "alb_techchallenge_ip" {
-#   value = module.prod.alb_dns_name
-# }
+variable "bd_usuario" {
+  type = string
+}
+
+variable "bd_senha" {
+  type = string
+}
+
+output "endpoint_bd_dev" {
+  value = module.dev.endpoint_bd
+}
