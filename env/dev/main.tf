@@ -1,10 +1,10 @@
 module "dev" {
-  source          = "../.."
-  ambiente        = "dev"
-  nome_bd = "techchallenge"
+  source           = "../.."
+  ambiente         = "dev"
+  nome_bd          = "techchallenge"
   nome_servidor_bd = "fiap-soat10"
-  bd_senha = var.bd_usuario
-  bd_usuario = var.bd_senha
+  bd_senha         = var.bd_usuario
+  bd_usuario       = var.bd_senha
 }
 
 variable "bd_usuario" {

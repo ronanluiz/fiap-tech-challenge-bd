@@ -1,6 +1,6 @@
 module "prod" {
-  source          = "../.."
-  ambiente        = "prod"
+  source           = "../.."
+  ambiente         = "prod"
   nome_banco_dados = "techchallange_bd_prod"
 }
 

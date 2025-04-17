@@ -14,7 +14,7 @@ data "aws_subnets" "subnets" {
 resource "aws_db_subnet_group" "postgres_subnet_group" {
   name       = "bd-subnet-group"
   subnet_ids = data.aws_subnets.subnets.ids
-  
+
   tags = {
     Name = "Postgres Subnet Group"
   }
