@@ -25,7 +25,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
       
       - name: Realiza setup do Terraform
-        run: ./setup.sh
+        run: ./terraform/setup.sh
 
       - name: Setup do Terraform
         uses: hashicorp/setup-terraform@v3
