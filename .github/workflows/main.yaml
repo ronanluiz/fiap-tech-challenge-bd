@@ -31,6 +31,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.11.3"
+          terraform_wrapper: false # Configuração para permiter acesso aos outputs do terraform
 
       - name: Terraform Format
         id: fmt
@@ -90,7 +91,7 @@ jobs:
       - name: Export Terraform outputs
         id: tf
         run: |
-          echo "BD_HOST=$(terraform output -raw endpoint_bd)"
+          echo "BD_HOST=$(terraform output -raw endpoint_bd)" >> $GITHUB_OUTPUT
         working-directory: ./terraform
       
       - name: Install PostgreSQL client
