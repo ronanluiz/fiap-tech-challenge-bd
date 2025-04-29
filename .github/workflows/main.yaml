@@ -95,3 +95,17 @@ jobs:
       
       - name: Print the endpoint_bd
         run: echo "Endpoint DB is ${{ steps.tf-outputs.outputs.endpoint_bd }}"
+
+      - name: Initialize RDS Postgres DB
+        uses: bitovi/github-actions-apply-sql-scripts-to-postgres@v0
+        with:
+            aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws_default_region: ${{ vars.AWS_REGION }}
+            sql_scripts_path: database
+            dry_run: false 
+            db_host: ${{ steps.tf-outputs.outputs.endpoint_bd }}
+            db_port: 5432
+            db_name: $BD_NOME
+            db_username: $BD_USUARIO
+            db_password: $BD_SENHA
