@@ -99,9 +99,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
       
-      - name: Wait for DB to be available
-        env:
-          BD_HOST: ${{ steps.tf.outputs.BD_HOST }}
+      - name: Wait for DB to be available        
         run: |
           echo "Aguardando o banco de dados ficar disponível..."
           # Extrair os outputs do Terraform
