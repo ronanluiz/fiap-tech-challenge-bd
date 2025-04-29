@@ -7,7 +7,7 @@ env:
   AMBIENTE: ${{ (github.ref == 'refs/heads/main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
   BD_SENHA: ${{ secrets.DB_PASSWORD }}
   BD_USUARIO: ${{ secrets.DB_USER }}
-  BD_NOME:  ${{ secrets.DB_NAME }}
+  BD_NOME:  ${{ vars.DB_NOME }}
 jobs:
   cria_infra:
     name: "Criação de infra para aplicações do techchallenge"
