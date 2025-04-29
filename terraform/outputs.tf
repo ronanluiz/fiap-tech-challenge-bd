@@ -1,3 +1,3 @@
-output "endpoint_bd" {
+output "bd_host" {
   value = aws_db_instance.bd_postgre.address
 }

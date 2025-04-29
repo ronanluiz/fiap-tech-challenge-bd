@@ -91,7 +91,7 @@ jobs:
       - name: Export Terraform outputs
         id: tf
         run: |
-          echo "BD_HOST=$(terraform output -raw endpoint_bd)" >> $GITHUB_OUTPUT
+          echo "BD_HOST=$(terraform output -raw bd_host)" >> $GITHUB_OUTPUT
         working-directory: ./terraform
       
       - name: Install PostgreSQL client
@@ -100,16 +100,18 @@ jobs:
           sudo apt-get install -y postgresql-client
       
       - name: Wait for DB to be available
+        env:
+          BD_HOST: ${{ steps.tf.outputs.BD_HOST }}
         run: |
           echo "Aguardando o banco de dados ficar disponível..."
           # Extrair os outputs do Terraform
-          DB_HOST=${{ steps.tf.outputs.BD_HOST }}
+          DB_HOST=$BD_HOST
           DB_USER=$BD_USUARIO
           DB_NAME=$BD_NOME
           DB_PORT=5432
           
           # Tentar conexão até que seja possível
-          until PGPASSWORD=$BD_SENHA psql -h ${{ steps.tf.outputs.BD_HOST }} -U $BD_USUARIO -d $BD_NOME -p 5432 -c "SELECT 1" > /dev/null 2>&1; do
+          until PGPASSWORD=$BD_SENHA psql -h $BD_HOST -U $BD_USUARIO -d $BD_NOME -p 5432 -c "SELECT 1" > /dev/null 2>&1; do
             echo "DB ainda não está disponível, aguardando 10 segundos..."
             sleep 10
           done
@@ -117,16 +119,16 @@ jobs:
       
       - name: Run initialization scripts
         run: |
-          DB_HOST=${{ steps.tf.outputs.BD_HOST }}
+          DB_HOST=$BD_HOST
           DB_USER=$BD_USUARIO
           DB_NAME=$BD_NOME
           DB_PORT=5432
           
           echo "Executando scripts de inicialização..."
           # Execute DDL
-          PGPASSWORD=$BD_SENHA psql -h ${{ steps.tf.outputs.BD_HOST }} -U $BD_USUARIO -d $BD_NOME -p 5432 -f ./database/01.sql
+          PGPASSWORD=$BD_SENHA psql -h $BD_HOST -U $BD_USUARIO -d $BD_NOME -p 5432 -f ./database/01.sql
           
           # Execute DML 
-          PGPASSWORD=$BD_SENHA psql -h ${{ steps.tf.outputs.BD_HOST }} -U $BD_USUARIO -d $BD_NOME -p 5432 -f ./database/02.sql
+          PGPASSWORD=$BD_SENHA psql -h $BD_HOST -U $BD_USUARIO -d $BD_NOME -p 5432 -f ./database/02.sql
           
           echo "Inicialização concluída!"
