@@ -93,19 +93,39 @@ jobs:
         with:
           path: terraform
       
-      - name: Print the endpoint_bd
-        run: echo "Endpoint DB is ${{ steps.tf-outputs.outputs.endpoint_bd }}"
-
-      - name: Initialize RDS Postgres DB
-        uses: bitovi/github-actions-apply-sql-scripts-to-postgres@v0
-        with:
-            aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws_default_region: ${{ vars.AWS_REGION }}
-            sql_scripts_path: database
-            dry_run: false 
-            db_host: ${{ steps.tf-outputs.outputs.endpoint_bd }}
-            db_port: 5432
-            db_name: $BD_NOME
-            db_username: $BD_USUARIO
-            db_password: $BD_SENHA
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      
+      - name: Wait for DB to be available
+        run: |
+          echo "Aguardando o banco de dados ficar disponível..."
+          # Extrair os outputs do Terraform
+          DB_HOST=${{ steps.tf-outputs.outputs.endpoint_bd }}
+          DB_USER=$BD_USUARIO
+          DB_NAME=$BD_NOME
+          DB_PORT=5432
+          
+          # Tentar conexão até que seja possível
+          until PGPASSWORD=$BD_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -p $DB_PORT -c "SELECT 1" > /dev/null 2>&1; do
+            echo "DB ainda não está disponível, aguardando 10 segundos..."
+            sleep 10
+          done
+          echo "Banco de dados está pronto!"
+      
+      - name: Run initialization scripts
+        run: |
+          DB_HOST=${{ steps.tf-outputs.outputs.endpoint_bd }}
+          DB_USER=$BD_USUARIO
+          DB_NAME=$BD_NOME
+          DB_PORT=5432
+          
+          echo "Executando scripts de inicialização..."
+          # Execute DDL
+          PGPASSWORD=$BD_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -p $DB_PORT -f ./database/01.sql
+          
+          # Execute DML 
+          PGPASSWORD=$BD_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -p $DB_PORT -f ./database/02.sql
+          
+          echo "Inicialização concluída!"
