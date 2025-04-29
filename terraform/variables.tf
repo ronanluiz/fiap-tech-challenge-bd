@@ -1,14 +1,15 @@
+locals {
+  projeto = "${var.ambiente}-tc-bd"
+}
+
 variable "regiao" {
   type    = string
   default = "us-east-1"
 }
 
 variable "ambiente" {
-  type = string
-}
-
-variable "nome_servidor_bd" {
-  type = string
+  type    = string
+  default = "dev"
 }
 
 variable "nome_bd" {
