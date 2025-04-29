@@ -10,7 +10,7 @@ resource "aws_db_instance" "bd_postgre" {
   max_allocated_storage = 10 # Limite para escalonamento automático
   storage_type          = "gp2"
 
-  db_name  = var.nome_bd
+  db_name  = var.bd_nome
   username = var.bd_usuario
   password = var.bd_senha
   port     = 5432

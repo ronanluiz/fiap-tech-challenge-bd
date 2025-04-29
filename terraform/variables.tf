@@ -12,7 +12,7 @@ variable "ambiente" {
   default = "dev"
 }
 
-variable "nome_bd" {
+variable "bd_nome" {
   type = string
 }
 
