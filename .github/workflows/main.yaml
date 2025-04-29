@@ -87,11 +87,11 @@ jobs:
         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && github.event_name == 'push'
         run: terraform -chdir=terraform apply -var "ambiente=$AMBIENTE" -var "bd_usuario=$BD_USUARIO" -var "bd_senha=$BD_SENHA" -var "bd_nome=$BD_NOME" -auto-approve -input=false
       
-      - name: Get Terraform outputs
-        uses: dflook/terraform-output@v1
-        id: tf-outputs
-        with:
-          path: terraform
+      - name: Export Terraform outputs
+        id: tf
+        run: |
+          echo "BD_HOST=$(terraform output -raw endpoint_bd)"
+        working-directory: ./terraform
       
       - name: Install PostgreSQL client
         run: |
@@ -102,13 +102,13 @@ jobs:
         run: |
           echo "Aguardando o banco de dados ficar disponível..."
           # Extrair os outputs do Terraform
-          DB_HOST=${{ steps.tf-outputs.outputs.endpoint_bd }}
+          DB_HOST=${{ steps.tf.outputs.BD_HOST }}
           DB_USER=$BD_USUARIO
           DB_NAME=$BD_NOME
           DB_PORT=5432
           
           # Tentar conexão até que seja possível
-          until PGPASSWORD=$BD_SENHA psql -h $DB_HOST -U $DB_USER -d $DB_NAME -p $DB_PORT -c "SELECT 1" > /dev/null 2>&1; do
+          until PGPASSWORD=$BD_SENHA psql -h ${{ steps.tf.outputs.BD_HOST }} -U $BD_USUARIO -d $BD_NOME -p 5432 -c "SELECT 1" > /dev/null 2>&1; do
             echo "DB ainda não está disponível, aguardando 10 segundos..."
             sleep 10
           done
@@ -116,16 +116,16 @@ jobs:
       
       - name: Run initialization scripts
         run: |
-          DB_HOST=${{ steps.tf-outputs.outputs.endpoint_bd }}
+          DB_HOST=${{ steps.tf.outputs.BD_HOST }}
           DB_USER=$BD_USUARIO
           DB_NAME=$BD_NOME
           DB_PORT=5432
           
           echo "Executando scripts de inicialização..."
           # Execute DDL
-          PGPASSWORD=$BD_SENHA psql -h $DB_HOST -U $DB_USER -d $DB_NAME -p $DB_PORT -f ./database/01.sql
+          PGPASSWORD=$BD_SENHA psql -h ${{ steps.tf.outputs.BD_HOST }} -U $BD_USUARIO -d $BD_NOME -p 5432 -f ./database/01.sql
           
           # Execute DML 
-          PGPASSWORD=$BD_SENHA psql -h $DB_HOST -U $DB_USER -d $DB_NAME -p $DB_PORT -f ./database/02.sql
+          PGPASSWORD=$BD_SENHA psql -h ${{ steps.tf.outputs.BD_HOST }} -U $BD_USUARIO -d $BD_NOME -p 5432 -f ./database/02.sql
           
           echo "Inicialização concluída!"
