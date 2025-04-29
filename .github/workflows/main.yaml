@@ -91,7 +91,7 @@ jobs:
       - name: Export Terraform outputs
         id: tf
         run: |
-          echo "BD_HOST=$(terraform output -raw bd_host)" >> $GITHUB_OUTPUT
+          echo "BD_HOST=$(terraform output -raw bd_host)" >> $GITHUB_ENV
         working-directory: ./terraform
       
       - name: Install PostgreSQL client
