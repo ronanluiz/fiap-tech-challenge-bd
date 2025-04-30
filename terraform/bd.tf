@@ -19,7 +19,7 @@ resource "aws_db_instance" "bd_postgre" {
   port     = 5432
 
   publicly_accessible = true
-  multi_az            = false # Defina como true para alta disponibilidade (mais caro)
+  multi_az            = true # Defina como true para alta disponibilidade (mais caro)
 
   vpc_security_group_ids = [aws_security_group.bd.id]
   db_subnet_group_name   = aws_db_subnet_group.subnet_group.name
