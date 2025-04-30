@@ -7,7 +7,7 @@ env:
   AMBIENTE: ${{ (github.ref == 'refs/heads/main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
   BD_SENHA: ${{ secrets.DB_PASSWORD }}
   BD_USUARIO: ${{ secrets.DB_USER }}
-  BD_NOME:  ${{ vars.DB_NOME }}
+  BD_NOME:  ${{ vars.DB_NAME }}
 jobs:
   cria_infra:
     name: "Criação de infra para aplicações do techchallenge"
@@ -101,12 +101,7 @@ jobs:
       
       - name: Wait for DB to be available        
         run: |
-          echo "Aguardando o banco de dados ficar disponível..."
-          # Extrair os outputs do Terraform
-          DB_HOST=$BD_HOST
-          DB_USER=$BD_USUARIO
-          DB_NAME=$BD_NOME
-          DB_PORT=5432
+          echo "Aguardando o banco de dados ficar disponível..."          
           
           # Tentar conexão até que seja possível
           until PGPASSWORD=$BD_SENHA psql -h $BD_HOST -U $BD_USUARIO -d $BD_NOME -p 5432 -c "SELECT 1" > /dev/null 2>&1; do
@@ -117,11 +112,6 @@ jobs:
       
       - name: Run initialization scripts
         run: |
-          DB_HOST=$BD_HOST
-          DB_USER=$BD_USUARIO
-          DB_NAME=$BD_NOME
-          DB_PORT=5432
-          
           echo "Executando scripts de inicialização..."
           # Execute DDL
           PGPASSWORD=$BD_SENHA psql -h $BD_HOST -U $BD_USUARIO -d $BD_NOME -p 5432 -f ./database/01.sql

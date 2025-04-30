@@ -1,5 +1,8 @@
 locals {
+  # Defina como false em produção
   skip_final_snapshot = var.ambiente == "prod" ? false : true
+  # Defina como true em produção
+  deletion_protection = var.ambiente == "prod"
 }
 
 resource "aws_db_instance" "bd_postgre" {
@@ -21,8 +24,8 @@ resource "aws_db_instance" "bd_postgre" {
   vpc_security_group_ids = [aws_security_group.bd.id]
   db_subnet_group_name   = aws_db_subnet_group.subnet_group.name
 
-  skip_final_snapshot = local.skip_final_snapshot # Defina como false em produção
-  deletion_protection = false                     # Defina como true em produção
+  skip_final_snapshot = local.skip_final_snapshot 
+  deletion_protection = local.deletion_protection
 }
 
 
