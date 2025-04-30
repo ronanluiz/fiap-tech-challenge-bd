@@ -2,6 +2,10 @@ name: "Desprovisionamento de infraestrutura básica para as aplicações"
 on:
   workflow_dispatch:  
 
+env:
+  BD_SENHA: ${{ secrets.DB_PASSWORD }}
+  BD_USUARIO: ${{ secrets.DB_USER }}
+  BD_NOME:  ${{ vars.DB_NOME }}
 jobs:
   destroi_infra:
     name: "Desprovisionamento da infra para aplicações do techchallenge"
@@ -27,4 +31,4 @@ jobs:
         run: terraform -chdir=terraform init
         
       - name: Desprovisionando infra
-        run: terraform -chdir=terraform destroy -auto-approve
+        run: terraform -chdir=terraform destroy -auto-approve -var "bd_usuario=$BD_USUARIO" -var "bd_senha=$BD_SENHA" -var "bd_nome=$BD_NOME" 
