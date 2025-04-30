@@ -24,7 +24,7 @@ resource "aws_db_instance" "bd_postgre" {
   vpc_security_group_ids = [aws_security_group.bd.id]
   db_subnet_group_name   = aws_db_subnet_group.subnet_group.name
 
-  skip_final_snapshot = local.skip_final_snapshot 
+  skip_final_snapshot = local.skip_final_snapshot
   deletion_protection = local.deletion_protection
 }
 
