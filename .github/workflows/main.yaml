@@ -4,10 +4,10 @@ on:
     branches: [main, develop]   # Aceita push em qualquer branch
   pull_request:
 env:
-  AMBIENTE: ${{ (github.ref == 'refs/heads/main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
-  BD_SENHA: ${{ secrets.DB_PASSWORD }}
-  BD_USUARIO: ${{ secrets.DB_USER }}
-  BD_NOME:  ${{ vars.DB_NAME }}
+  AMBIENTE: ${{ (github.ref_name == 'main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
+  TF_VAR_bd_senha: ${{ secrets.DB_PASSWORD }}
+  TF_VAR_bd_usuario: ${{ secrets.DB_USER }}
+  TF_VAR_bd_nome:  ${{ vars.DB_NAME }}
 jobs:
   cria_infra:
     name: "Criação de infra para aplicações do techchallenge"
@@ -47,8 +47,8 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/develop'
-        run: terraform -chdir=terraform plan -var "ambiente=$AMBIENTE" -var "bd_usuario=$BD_USUARIO" -var "bd_senha=$BD_SENHA" -var "bd_nome=$BD_NOME" -no-color -input=false
+        if: github.event_name == 'pull_request' || github.ref_name == 'develop'
+        run: terraform -chdir=terraform plan -var "ambiente=$AMBIENTE" -no-color -input=false
         continue-on-error: true
 
       - name: Atualização do Pull Request
@@ -85,8 +85,8 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && github.event_name == 'push'
-        run: terraform -chdir=terraform apply -var "ambiente=$AMBIENTE" -var "bd_usuario=$BD_USUARIO" -var "bd_senha=$BD_SENHA" -var "bd_nome=$BD_NOME" -auto-approve -input=false
+        if: (github.ref_name == 'main' || github.ref_name == 'develop') && github.event_name == 'push'
+        run: terraform -chdir=terraform apply -var "ambiente=$AMBIENTE" -auto-approve -input=false
       
       - name: Export Terraform outputs
         id: tf
@@ -104,7 +104,7 @@ jobs:
           echo "Aguardando o banco de dados ficar disponível..."          
           
           # Tentar conexão até que seja possível
-          until PGPASSWORD=$BD_SENHA psql -h $BD_HOST -U $BD_USUARIO -d $BD_NOME -p 5432 -c "SELECT 1" > /dev/null 2>&1; do
+          until PGPASSWORD=$TF_VAR_bd_senha psql -h $BD_HOST -U $TF_VAR_bd_usuario -d $TF_VAR_bd_nome -p 5432 -c "SELECT 1" > /dev/null 2>&1; do
             echo "DB ainda não está disponível, aguardando 10 segundos..."
             sleep 10
           done
@@ -114,9 +114,9 @@ jobs:
         run: |
           echo "Executando scripts de inicialização..."
           # Execute DDL
-          PGPASSWORD=$BD_SENHA psql -h $BD_HOST -U $BD_USUARIO -d $BD_NOME -p 5432 -f ./database/01.sql
+          PGPASSWORD=$TF_VAR_bd_senha psql -h $BD_HOST -U $TF_VAR_bd_usuario -d $TF_VAR_bd_nome -p 5432 -f ./database/01.sql
           
           # Execute DML 
-          PGPASSWORD=$BD_SENHA psql -h $BD_HOST -U $BD_USUARIO -d $BD_NOME -p 5432 -f ./database/02.sql
+          PGPASSWORD=$TF_VAR_bd_senha psql -h $BD_HOST -U $TF_VAR_bd_usuario -d $TF_VAR_bd_nome -p 5432 -f ./database/02.sql
           
           echo "Inicialização concluída!"
