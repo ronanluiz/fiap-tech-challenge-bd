@@ -27,7 +27,7 @@ resource "aws_db_instance" "bd_postgre" {
   skip_final_snapshot = local.skip_final_snapshot
   deletion_protection = local.deletion_protection
 
-   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 }
 
 
