@@ -1,5 +1,5 @@
 locals {
-  projeto = "${var.ambiente}-tc-bd"
+  projeto = "${var.ambiente}-${var.nome_instancia}"
 }
 
 variable "regiao" {
@@ -26,5 +26,9 @@ variable "bd_usuario" {
 }
 
 variable "bd_senha" {
+  type = string
+}
+
+variable "nome_instancia" {
   type = string
 }
