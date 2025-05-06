@@ -6,7 +6,6 @@ env:
   TF_VAR_bd_senha: ""
   TF_VAR_bd_usuario: ""
   TF_VAR_bd_nome:  ""
-  TF_VAR_nome_instancia: ""
 jobs:
   destroi_infra:
     name: "Desprovisionamento da infra para aplicações do techchallenge"

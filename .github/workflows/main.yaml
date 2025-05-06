@@ -8,7 +8,6 @@ env:
   TF_VAR_bd_senha: ${{ secrets.DB_PASSWORD }}
   TF_VAR_bd_usuario: ${{ secrets.DB_USER }}
   TF_VAR_bd_nome:  ${{ vars.DB_NAME }}
-  TF_VAR_nome_instancia: "tc-db-${{github.run_number}}"
 jobs:
   cria_infra:
     name: "Criação de infra para aplicações do techchallenge"
