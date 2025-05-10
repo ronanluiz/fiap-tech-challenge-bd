@@ -1,21 +1,21 @@
 locals {
   # Defina como false em produção
-  skip_final_snapshot = var.ambiente == "prod" ? false : true
+  skip_final_snapshot = var.environment == "prod" ? false : true
   # Defina como true em produção
-  deletion_protection = var.ambiente == "prod"
+  deletion_protection = var.environment == "prod"
 }
 
 resource "aws_db_instance" "bd_postgre" {
-  identifier            = local.projeto
+  identifier            = local.project
   engine                = "postgres"
-  instance_class        = var.instancia
+  instance_class        = var.db_instance_type
   allocated_storage     = 5  # Em GB
   max_allocated_storage = 10 # Limite para escalonamento automático
   storage_type          = "gp2"
 
-  db_name  = var.bd_nome
-  username = var.bd_usuario
-  password = var.bd_senha
+  db_name  = var.db_name
+  username = var.db_username
+  password = var.db_password
   port     = 5432
 
   publicly_accessible = true

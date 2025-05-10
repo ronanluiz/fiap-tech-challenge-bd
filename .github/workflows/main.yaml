@@ -4,10 +4,10 @@ on:
     branches: [main, develop]   # Aceita push em qualquer branch
   pull_request:
 env:
-  AMBIENTE: ${{ (github.ref_name == 'main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
-  TF_VAR_bd_senha: ${{ secrets.DB_PASSWORD }}
-  TF_VAR_bd_usuario: ${{ secrets.DB_USER }}
-  TF_VAR_bd_nome:  ${{ vars.DB_NAME }}
+  TF_VAR_enviroment: ${{ (github.ref_name == 'main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
+  TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+  TF_VAR_db_username: ${{ secrets.DB_USER }}
+  TF_VAR_db_name:  ${{ vars.DB_NAME }}
 jobs:
   cria_infra:
     name: "Criação de infra para aplicações do techchallenge"
@@ -25,7 +25,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
       
       - name: Realiza setup do Terraform
-        run: ./terraform/setup.sh
+        run: ./setup.sh
 
       - name: Setup do Terraform
         uses: hashicorp/setup-terraform@v3
@@ -48,7 +48,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: github.event_name == 'pull_request' || github.ref_name == 'develop'
-        run: terraform -chdir=terraform plan -var "ambiente=$AMBIENTE" -no-color -input=false
+        run: terraform -chdir=terraform plan -no-color -input=false
         continue-on-error: true
 
       - name: Atualização do Pull Request
@@ -86,7 +86,7 @@ jobs:
 
       - name: Terraform Apply
         if: (github.ref_name == 'main' || github.ref_name == 'develop') && github.event_name == 'push'
-        run: terraform -chdir=terraform apply -var "ambiente=$AMBIENTE" -auto-approve -input=false
+        run: terraform -chdir=terraform apply -auto-approve -input=false
       
       - name: Export Terraform outputs
         id: tf
@@ -94,29 +94,12 @@ jobs:
           echo "BD_HOST=$(terraform output -raw bd_host)" >> $GITHUB_ENV
         working-directory: ./terraform
       
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-      
-      - name: Wait for DB to be available        
-        run: |
-          echo "Aguardando o banco de dados ficar disponível..."          
+        
+      - uses: liquibase-github-actions/update@v4.31.1
+        env:
+          JDBC_URL: "jdbc:postgresql://${{ github.env.BD_HOST }}:5432/${{ vars.DB_NAME }}?user=${{ secrets.DB_USER }}&password=${{ secrets.DB_PASSWORD }}"
+        with:
+          changelogFile: "./database/changelog.yaml"
+          url: ${{ github.env.JDBC_URL }}
+    
           
-          # Tentar conexão até que seja possível
-          until PGPASSWORD=$TF_VAR_bd_senha psql -h $BD_HOST -U $TF_VAR_bd_usuario -d $TF_VAR_bd_nome -p 5432 -c "SELECT 1" > /dev/null 2>&1; do
-            echo "DB ainda não está disponível, aguardando 10 segundos..."
-            sleep 10
-          done
-          echo "Banco de dados está pronto!"
-      
-      - name: Run initialization scripts
-        run: |
-          echo "Executando scripts de inicialização..."
-          # Execute DDL
-          PGPASSWORD=$TF_VAR_bd_senha psql -h $BD_HOST -U $TF_VAR_bd_usuario -d $TF_VAR_bd_nome -p 5432 -f ./database/01.sql
-          
-          # Execute DML 
-          PGPASSWORD=$TF_VAR_bd_senha psql -h $BD_HOST -U $TF_VAR_bd_usuario -d $TF_VAR_bd_nome -p 5432 -f ./database/02.sql
-          
-          echo "Inicialização concluída!"

@@ -1,30 +1,30 @@
 locals {
-  projeto = "${var.ambiente}-tc-bd"
+  project = "${var.environment}-tc-bd"
 }
 
-variable "regiao" {
+variable "region" {
   type    = string
   default = "us-east-1"
 }
 
-variable "ambiente" {
+variable "environment" {
   type    = string
   default = "dev"
 }
 
-variable "bd_nome" {
+variable "db_name" {
   type = string
 }
 
-variable "instancia" {
+variable "db_instance_type" {
   type    = string
   default = "db.t3.medium"
 }
 
-variable "bd_usuario" {
+variable "db_username" {
   type = string
 }
 
-variable "bd_senha" {
+variable "db_password" {
   type = string
 }

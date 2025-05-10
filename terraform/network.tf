@@ -1,6 +1,6 @@
 data "aws_vpc" "vpc" {
   tags = {
-    Name = "${var.ambiente}-tc-soat10-vpc"
+    Name = "${var.environment}-tc-soat10-vpc"
   }
 }
 
@@ -12,7 +12,7 @@ data "aws_subnets" "subnets" {
 }
 
 resource "aws_db_subnet_group" "subnet_group" {
-  name       = "${local.projeto}-subnet-group"
+  name       = "${local.project}-subnet-group"
   subnet_ids = data.aws_subnets.subnets.ids
 
   tags = {
@@ -21,10 +21,10 @@ resource "aws_db_subnet_group" "subnet_group" {
 }
 
 resource "aws_security_group" "bd" {
-  name   = "${local.projeto}-sg"
+  name   = "${local.project}-sg"
   vpc_id = data.aws_vpc.vpc.id
   tags = {
-    Name = "${local.projeto}-sg"
+    Name = "${local.project}-sg"
   }
 
   ingress {

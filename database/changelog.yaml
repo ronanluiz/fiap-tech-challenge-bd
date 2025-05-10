@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 01 - Criacao de estrtura de banco de dados
+      author: ronanluiz
+      changes:
+        - sqlFile:
+            path: scripts/01.sql
+            relativeToChangelogFile: true
+            
+  - changeSet:
+      id: 02 - Inclusao de massa de dados inicial para as aplicacoes
+      author: ronanluiz
+      changes:
+        - sqlFile:
+            path: scripts/02.sql
+            relativeToChangelogFile: true
+  
