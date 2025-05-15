@@ -14,4 +14,11 @@ databaseChangeLog:
         - sqlFile:
             path: scripts/02.sql
             relativeToChangelogFile: true
+  - changeSet:
+      id: 03 - Alteracao da tabela customers
+      author: ronanluiz
+      changes:
+        - sqlFile:
+            path: scripts/03.sql
+            relativeToChangelogFile: true
   
