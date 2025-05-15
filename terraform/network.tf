@@ -4,16 +4,19 @@ data "aws_vpc" "vpc" {
   }
 }
 
-data "aws_subnets" "subnets" {
+data "aws_subnets" "public_subnets" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.vpc.id]
+  }
+  tags = {
+    tier = "public"
   }
 }
 
 resource "aws_db_subnet_group" "subnet_group" {
   name       = "${local.project}-subnet-group"
-  subnet_ids = data.aws_subnets.subnets.ids
+  subnet_ids = data.aws_subnets.public_subnets.ids
 
   tags = {
     Name = "Postgres Subnet Group"

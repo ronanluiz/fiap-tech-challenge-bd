@@ -94,6 +94,11 @@ jobs:
           echo "BD_HOST=$(terraform output -raw bd_host)" >> $GITHUB_ENV
         working-directory: ./terraform
       
+      - name: Create Output
+        run: |
+          echo "## DB host" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Disponível em ${{ env.BD_HOST }}" >> $GITHUB_STEP_SUMMARY
+      
         
       - uses: liquibase-github-actions/update@v4.31.1
         env:
