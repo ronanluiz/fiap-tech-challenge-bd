@@ -79,6 +79,10 @@ Este script irá:
 
 Para executar os scripts Terraform localmente, siga os passos abaixo:
 
+### Pré-requisitos
+
+Os scripts dependem da VPC que é criada à partir do [repositório de infra](https://github.com/ronanluiz/fiap-tech-challenge-infra). Portanto, será necessário executar os scripts deste para ter a infra básica para execução.
+
 ### Inicialize o Terraform
 
 ```bash
