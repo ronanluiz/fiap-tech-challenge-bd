@@ -6,8 +6,8 @@ on:
 env:
   TF_VAR_enviroment: ${{ (github.ref_name == 'main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
   TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-  TF_VAR_db_username: ${{ secrets.DB_USER }}
-  TF_VAR_db_name:  ${{ vars.DB_NAME }}
+  TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+  TF_VAR_db_name:  ${{ secrets.DB_NAME }}
 jobs:
   cria_infra:
     name: "Criação de infra para aplicações do techchallenge"
@@ -102,7 +102,7 @@ jobs:
         
       - uses: liquibase-github-actions/update@v4.31.1
         env:
-          JDBC_URL: "jdbc:postgresql://${{ env.BD_HOST }}:5432/${{ vars.DB_NAME }}?user=${{ secrets.DB_USER }}&password=${{ secrets.DB_PASSWORD }}"
+          JDBC_URL: "jdbc:postgresql://${{ env.BD_HOST }}:5432/${{ secrets.DB_NAME }}?user=${{ secrets.DB_USERNAME }}&password=${{ secrets.DB_PASSWORD }}"
         with:
           changelogFile: "./database/changelog.yaml"
           url: ${{ env.JDBC_URL }}
