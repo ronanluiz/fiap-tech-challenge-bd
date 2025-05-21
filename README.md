@@ -183,3 +183,177 @@ Abaixo a lista de variáveis/secrets que precisam ser configurados no github (Se
 | Falha ao realizar o `terraform destroy` | Verificar se não existe outro recurso criado que está referenciando um recurso criado através de scripts desse repositório. |
 
 Para problemas mais complexos, consulte a documentação oficial do [Terraform](https://www.terraform.io/docs/index.html) e da [AWS](https://docs.aws.amazon.com/).
+
+
+
+## Justificativa da Escolha do Banco de Dados (PostgreSQL)
+
+A escolha do PostgreSQL como banco de dados principal foi baseada nos seguintes critérios, definidos após uma fase inicial de Event Storming:
+
+* Modelagem Relacional: A forte relação entre as entidades e as características dos agregados sugeriram o uso de um banco de dados relacional (SQL).
+* Open Source: Preferência por uma solução de código aberto.
+* Robustez: Necessidade de um banco de dados confiável e estável.
+* Excelente Performance: Requisito de bom desempenho para lidar com um volume considerável de dados e transações.
+* Suporte a ACID: Importância de garantir a atomicidade, consistência, isolamento e durabilidade das transações.
+* Suporte a JSON: Capacidade de lidar com dados semiestruturados, caso seja necessário no futuro.
+* Familiaridade da Equipe: Todos os integrantes da equipe já possuíam experiência com bancos de dados relacionais (SQL).
+* Integração com Serviços Cloud e Serverless: Compatibilidade com plataformas de nuvem e arquiteturas serverless.
+
+## Estrutura do Banco de Dados
+
+O banco de dados evoluiu ao longo do desenvolvimento da aplicação. Inicialmente, possuía as seguintes tabelas:
+
+* customer: Armazena os dados dos clientes.
+* order: Armazena os pedidos realizados pelos clientes.
+* order_item: Armazena os itens de cada pedido.
+* payment: Armazena as informações de pagamento de cada pedido.
+* product: Armazena os dados dos produtos disponíveis.
+
+### Banco de Dados Inicial (Diagrama)
+
+![image](https://github.com/user-attachments/assets/f0fdf7a3-5585-4c72-be5e-29dbaa0217af)
+
+As principais relações entre as tabelas eram:
+
+* Um `Customer` pode ter muitos `Orders` (relação 1:N).
+* Cada `Order` pertence a um `Customer`.
+* Cada `Order` pode ter vários `Order_Items` (relação 1:N).
+* Cada `Order_Item` refere-se a um `Product` (relação N:1).
+* Cada `Order` tem um `Payment` (relação 1:1 ou 1:N, dependendo da regra de negócio).
+
+### Banco de Dados Atual (Diagrama)
+
+Após testes e refinamentos, a estrutura do banco de dados foi aprimorada com a inclusão de duas novas tabelas:
+
+* cart: Armazena os carrinhos de compra dos clientes.
+* cart_item: Armazena os itens de cada carrinho de compra.
+
+![image](https://github.com/user-attachments/assets/a0ddc12e-c1d3-42f0-957c-7e913dbaf5b3)
+
+As relações foram atualizadas para:
+
+* Um `Customer` pode ter vários `Carts` (relação 1:N).
+* Cada `Cart` pertence a um `Customer`.
+* Cada `Cart` pode ter vários `Cart_Items` (relação 1:N).
+* Cada `Cart_Item` refere-se a um `Product` (relação N:1).
+
+As tabelas e seus atributos são detalhados abaixo:
+
+customer
+
+| Coluna        | Tipo           | Atributos                                 |
+|---------------|----------------|-------------------------------------------|
+| customer_Id   | UUID           | PK                                        |
+| created_at    | TIMESTAMPTZ    | NOT NULL DEFAULT CURRENT_TIMESTAMP        |
+| name          | VARCHAR(255)   | NOT NULL                                  |
+| email         | VARCHAR(255)   | NULL                                      |
+| cpf           | VARCHAR(11)    | NULL                                      |
+| status        | VARCHAR(50)    | DEFAULT 'active'                          |
+
+order
+
+| Coluna      | Tipo       | Atributos  |
+|-------------|------------|------------|
+| order Id    | UUID       | PK         |
+| customer_id | UUID       | FK         |
+| status      | VARCHAR(50) | DEFAULT 'active' |
+
+order_item
+
+| Coluna        | Tipo           | Atributos  |
+|---------------|----------------|------------|
+| order_item_id | UUID           | PK         |
+| order_id      | UUID           | NOT NULL FK |
+| product_id    | UUID           | NOT NULL FK |
+| quantity      | INTEGER        | NOT NULL     |
+| price         | DECIMAL(10, 2) | NOT NULL     |
+| note          | VARCHAR(255)   | NULL         |
+
+product
+
+| Coluna          | Tipo           | Atributos      |
+|-----------------|----------------|----------------|
+| product_id      | UUID           | PK             |
+| name            | VARCHAR(50)    | NOT NULL       |
+| description     | VARCHAR(200)   | NOT NULL       |
+| category        | INT            | NOT NULL       |
+| price           | NUMERIC(10, 2) | NOT NULL       |
+| status          | INT            | NOT NULL       |
+| time_to_prepare | NUMERIC(5, 2) | NOT NULL       |
+| is_available    | BOOLEAN        | NOT NULL       |
+| created_at      | TIMESTAMP      | NOT NULL       |
+| amount          | DECIMAL(10, 2) | NOT NULL       |
+| order_number    | SERIAL         |                |
+
+cart
+
+| Coluna      | Tipo   | Atributos  |
+|-------------|--------|------------|
+| cart Id     | UUID   | PK         |
+| customer_id | UUID   | FK         |
+| status      | VARCHAR |            |
+| created_at  | TIMES  |            |
+
+cart_item
+
+| Coluna        | Tipo       | Atributos  |
+|---------------|------------|------------|
+| cart_Item_Id  | UUID       | PK         |
+| cart_id       | UUID       | FK         |
+| product_id    | UUID       | FK         |
+| quantity      | INTEGER    |            |
+| notes         | VARCHAR    |            |
+
+payment
+
+| Coluna                | Tipo           | Atributos       |
+|-----------------------|----------------|-----------------|
+| payment_id            | UUID           | PK              |
+| order_id              | UUID           | FK              |
+| total_amount          | DECIMAL(10, 2) | NOT NULL        |
+| qr_data               | TEXT           | NULL            |
+| external_payment_id   | VARCHAR(255)   | NULL            |
+| created_at            | TIMESTAMP      | NOT NULL DEFAULT |
+| paid_at               | TIMESTAMP      | NULL            |
+| status                | VARCHAR(255)   | NOT NULL DEFAULT 'Pending' |
+| status_detail         | VARCHAR(255)   | NOT NULL DEFAULT 'Pending' |
+
+Os Enums foram utilizados para:
+
+* Status do Pedido (Pendente, Processado, Enviado, Entregue)
+* Categoria do Produto (Eletrônicos, Roupas, Alimentos)
+
+##  Relacionamentos entre as Tabelas
+
+### Customer - Order
+
+* **Relação:** Um `Customer` pode ter muitos `Orders` (1:N).
+* **Implementação:** Na tabela `order`, a coluna `customer_id` é uma chave estrangeira referenciando `customer(customer_id)`.
+
+### Order - Order\_Item - Product
+
+* **Relação Order e Order\_Item:** Cada `Order` pode ter vários itens, ou seja, muitas entradas em `order_item` (1:N).
+* **Relação Order\_Item e Product:** Cada registro em `order_item` referencia exatamente um `Product` (N:1).
+* **Implementação:**
+    * Na tabela `order_item`, a coluna `order_id` referencia `order(order_id)`.
+    * A coluna `product_id` referencia `product(product_id)`.
+
+### Order - Payment
+
+* **Relação:** Um `Order` pode ter um (ou possivelmente mais, dependendo do modelo de negócio) `Payment`. Geralmente, o pagamento é considerado como uma entidade associada a um pedido (1:1 ou 1:N, conforme sua regra de negócio).
+* **Implementação:** Na tabela `payment`, a coluna `order_id` é uma chave estrangeira que referencia `order(order_id)`.
+
+###  Customer - Cart - Cart\_Item - Product
+
+* **Relação Customer e Cart:** Um `Customer` pode ter um carrinho (ou múltiplos, historicamente ou se o carrinho for persistido) – a tabela `cart` referencia o cliente via `customer_id` (1:N ou 0:N se o carrinho puder existir sem vínculo imediato).
+* **Relação Cart e Cart\_Item:** Cada `Cart` pode ter vários `Cart_Items` (1:N).
+* **Relação Cart\_Item e Product:** Cada item no carrinho referencia um `Product` (N:1).
+* **Implementação:**
+    * Em `cart`, a coluna `customer_id` referencia `customer(customer_id)`.
+    * Em `cart_item`, a coluna `cart_id` referencia `cart(cart_id)` e
+    * A coluna `product_id` referencia `product(product_id)`.
+
+
+##  Considerações Finais
+
+O processo de construção deste software é contínuo e sujeito a mudanças. Estamos abertos a novas possibilidades de melhorias e correções, buscando sempre uma solução capaz de ser ajustada sem comprometer a aplicação.
