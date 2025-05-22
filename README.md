@@ -211,7 +211,7 @@ O banco de dados evoluiu ao longo do desenvolvimento da aplicação. Inicialment
 
 ### Banco de Dados Inicial (Diagrama)
 
-![image](https://github.com/user-attachments/assets/f0fdf7a3-5585-4c72-be5e-29dbaa0217af)
+![image](https://github.com/user-attachments/assets/eeb56b6e-a6d7-4b11-ab1d-4658aae18d96)
 
 As principais relações entre as tabelas eram:
 
@@ -228,7 +228,7 @@ Após testes e refinamentos, a estrutura do banco de dados foi aprimorada com a 
 * cart: Armazena os carrinhos de compra dos clientes.
 * cart_item: Armazena os itens de cada carrinho de compra.
 
-![image](https://github.com/user-attachments/assets/a0ddc12e-c1d3-42f0-957c-7e913dbaf5b3)
+![image](https://github.com/user-attachments/assets/c63ccc54-941c-4b79-b3a9-b09579dbeb28)
 
 As relações foram atualizadas para:
 
