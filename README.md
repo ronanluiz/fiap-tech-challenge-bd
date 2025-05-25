@@ -113,6 +113,8 @@ Este comando organiza a formatação dos scripts nos arquivos padronizando princ
 terraform -chdir=terraform plan -out=tfplan
 ```
 
+⚠ **Obs.:** Serão exigidas algumas informações como variáveis para execução dos scripts.
+
 Este comando cria um plano de execução e salva no arquivo `tfplan`. Revise cuidadosamente as alterações propostas.
 
 ### Aplique as alterações
