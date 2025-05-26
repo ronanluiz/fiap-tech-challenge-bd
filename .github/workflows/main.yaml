@@ -105,6 +105,7 @@ jobs:
       
         
       - uses: liquibase-github-actions/update@v4.31.1
+        if: github.ref_name != 'pull_request'
         env:
           JDBC_URL: "jdbc:postgresql://${{ env.BD_HOST }}:5432/${{ secrets.DB_NAME }}?user=${{ secrets.DB_USERNAME }}&password=${{ secrets.DB_PASSWORD }}"
         with:
