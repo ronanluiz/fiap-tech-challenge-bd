@@ -1,6 +1,6 @@
 data "aws_vpc" "vpc" {
   tags = {
-    Name = "${var.environment}-tc-soat10-vpc"
+    Name = local.vpc_name
   }
 }
 

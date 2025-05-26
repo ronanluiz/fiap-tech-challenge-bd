@@ -1,5 +1,6 @@
 locals {
-  project = "${var.environment}-tc-bd"
+  project  = "${var.environment}-tc-bd"
+  vpc_name = "tc-soat10-vpc"
 }
 
 variable "region" {
