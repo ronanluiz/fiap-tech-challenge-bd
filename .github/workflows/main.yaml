@@ -3,15 +3,18 @@ on:
   push:
     branches: [main, develop]   # Aceita push em qualquer branch
   pull_request:
+permissions:
+      issues: write
 env:
   TF_VAR_environment: ${{ (github.ref_name == 'main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
   TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
   TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
   TF_VAR_db_name:  ${{ secrets.DB_NAME }}
 jobs:
-  cria_infra:
+  cria_infra:    
     name: "Criação de infra para aplicações do techchallenge"
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4.2.2
