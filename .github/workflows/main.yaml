@@ -1,0 +1,115 @@
+name: "Criação de Infraestrutura básica para as aplicações"
+on:
+  push:
+    branches: [main, develop]   # Aceita push em qualquer branch
+  pull_request:
+permissions:
+    issues: write
+    pull-requests: write
+env:
+  TF_VAR_environment: ${{ (github.ref_name == 'main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
+  TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+  TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+  TF_VAR_db_name:  ${{ secrets.DB_NAME }}
+jobs:
+  cria_infra:    
+    name: "Criação de infra para aplicações do techchallenge"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4.2.2
+      
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      
+      - name: Realiza setup do Terraform
+        run: ./setup.sh
+
+      - name: Setup do Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.11.3"
+          terraform_wrapper: false # Configuração para permiter acesso aos outputs do terraform
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform -chdir=terraform fmt -check
+
+      - name: Terraform Init
+        id: init
+        run: terraform -chdir=terraform init
+      
+      - name: Terraform Validate
+        id: validate
+        run: terraform -chdir=terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request' || github.ref_name == 'develop'
+        run: terraform -chdir=terraform plan -no-color -input=false
+        continue-on-error: true
+
+      - name: Atualização do Pull Request
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: ${{ steps.plan.outputs.stdout }}
+        with:
+          script: |
+            const output = `#### Terraform - Formatação e Estilo 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Init ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validação 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Detalhes do Terraform Plan</summary>
+
+            \`\`\`terraform\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Enviado por: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: (github.ref_name == 'main' || github.ref_name == 'develop') && github.event_name == 'push'
+        run: terraform -chdir=terraform apply -auto-approve -input=false
+      
+      - name: Export Terraform outputs
+        id: tf
+        run: |
+          echo "BD_HOST=$(terraform output -raw bd_host)" >> $GITHUB_ENV
+        working-directory: ./terraform
+      
+      - name: Create Output
+        run: |
+          echo "## DB host" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Disponível em ${{ env.BD_HOST }}" >> $GITHUB_STEP_SUMMARY
+      
+        
+      - uses: liquibase-github-actions/update@v4.31.1
+        if: github.event_name != 'pull_request'
+        env:
+          JDBC_URL: "jdbc:postgresql://${{ env.BD_HOST }}:5432/${{ secrets.DB_NAME }}?user=${{ secrets.DB_USERNAME }}&password=${{ secrets.DB_PASSWORD }}"
+        with:
+          changelogFile: "./database/changelog.yaml"
+          url: ${{ env.JDBC_URL }}
+    
+          
