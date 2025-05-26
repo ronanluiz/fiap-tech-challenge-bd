@@ -4,7 +4,7 @@ on:
     branches: [main, develop]   # Aceita push em qualquer branch
   pull_request:
 env:
-  TF_VAR_enviroment: ${{ (github.ref_name == 'main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
+  TF_VAR_environment: ${{ (github.ref_name == 'main' || github.event_name == 'pull_request') && 'prod' || 'dev' }}
   TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
   TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
   TF_VAR_db_name:  ${{ secrets.DB_NAME }}
