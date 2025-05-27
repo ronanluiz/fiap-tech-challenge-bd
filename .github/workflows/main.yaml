@@ -12,15 +12,24 @@ env:
   TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
   TF_VAR_db_name:  ${{ secrets.DB_NAME }}
 jobs:
-  cria_infra:    
-    name: "Criação de infra para aplicações do techchallenge"
+  init:
     runs-on: ubuntu-latest
-    
+    outputs:
+      terraform_dir: "terraform/env/${{ env.TF_VAR_environment }}"
+      enable_plan: ${{ github.event_name == 'pull_request' || github.ref_name == 'develop' }}
+      enable_apply: ${{ (github.ref_name == 'main' || github.ref_name == 'develop') && github.event_name == 'push' }}
+      is_pull_request: ${{ github.event_name == 'pull_request' }}
+    steps:
+        - run: echo "Job initialized with dynamic outputs"
+
+  terraform:
+    runs-on: ubuntu-latest
+    needs: init    
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4.2.2
       
-      - name: Configurar credenciais AWS
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -28,10 +37,10 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ vars.AWS_REGION }}
       
-      - name: Realiza setup do Terraform
+      - name: Run Terraform backend setup
         run: ./setup.sh
 
-      - name: Setup do Terraform
+      - name: Terraform setup
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.11.3"
@@ -39,25 +48,25 @@ jobs:
 
       - name: Terraform Format
         id: fmt
-        run: terraform -chdir=terraform fmt -check
+        run: terraform -chdir=${{ needs.init.outputs.terraform_dir }} fmt -check
 
       - name: Terraform Init
         id: init
-        run: terraform -chdir=terraform init
+        run: terraform -chdir=${{ needs.init.outputs.terraform_dir }} init
       
       - name: Terraform Validate
         id: validate
-        run: terraform -chdir=terraform validate -no-color
+        run: terraform -chdir=${{ needs.init.outputs.terraform_dir }} validate -no-color
 
       - name: Terraform Plan
         id: plan
-        if: github.event_name == 'pull_request' || github.ref_name == 'develop'
-        run: terraform -chdir=terraform plan -no-color -input=false
+        if: ${{ needs.init.outputs.enable_plan == 'true'}}
+        run: terraform -chdir=${{ needs.init.outputs.terraform_dir }} plan -no-color -input=false
         continue-on-error: true
 
       - name: Atualização do Pull Request
         uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
+        if: ${{ needs.init.outputs.is_pull_request == 'true' }}
         env:
           PLAN: ${{ steps.plan.outputs.stdout }}
         with:
@@ -89,8 +98,8 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        if: (github.ref_name == 'main' || github.ref_name == 'develop') && github.event_name == 'push'
-        run: terraform -chdir=terraform apply -auto-approve -input=false
+        if: ${{ needs.init.outputs.enable_apply == 'true' }}
+        run: terraform -chdir=${{ needs.init.outputs.terraform_dir }} apply -auto-approve -input=false
       
       - name: Export Terraform outputs
         id: tf
@@ -105,7 +114,7 @@ jobs:
       
         
       - uses: liquibase-github-actions/update@v4.31.1
-        if: github.event_name != 'pull_request'
+        if: ${{ needs.init.outputs.is_pull_request == 'false' }}
         env:
           JDBC_URL: "jdbc:postgresql://${{ env.BD_HOST }}:5432/${{ secrets.DB_NAME }}?user=${{ secrets.DB_USERNAME }}&password=${{ secrets.DB_PASSWORD }}"
         with:

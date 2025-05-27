@@ -1,6 +1,6 @@
 locals {
-  project  = "${var.environment}-tc-bd"
-  vpc_name = "tc-soat10-vpc"
+  project  = "${var.environment}-${var.project_name}"
+  vpc_name = "${var.environment}-vpc"
 }
 
 variable "region" {
@@ -28,4 +28,9 @@ variable "db_username" {
 
 variable "db_password" {
   type = string
+}
+
+variable "project_name" {
+  type    = string
+  default = "tc-bd"
 }
