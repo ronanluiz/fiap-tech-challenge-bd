@@ -103,11 +103,13 @@ jobs:
       
       - name: Export Terraform outputs
         id: tf
+        if: ${{ env.ENABLE_APPLY == 'true' }}
         run: |
           echo "BD_HOST=$(terraform output -raw bd_host)" >> $GITHUB_ENV
         working-directory: "./${{ needs.init.outputs.terraform_dir }}"
       
       - name: Create Output
+        if: ${{ env.ENABLE_APPLY == 'true' }}
         run: |
           echo "## DB host" >> $GITHUB_STEP_SUMMARY
           echo "✅ Disponível em ${{ env.BD_HOST }}" >> $GITHUB_STEP_SUMMARY
