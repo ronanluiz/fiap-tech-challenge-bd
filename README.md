@@ -12,12 +12,14 @@ A infraestrutura é disponibilizada através de workflows do GitHub Actions.
 ├── .github/
 │   └── workflows/           # Workflows do GitHub Actions
 ├── terraform/               # Scripts Terraform
-│   ├── backend.tf           # Configurações para sincronização do estado do terraform
-│   ├── bd.tf                # Configurações para criação da instância do banco de dados no AWS Aurora RDS
-│   ├── security-groups.tf   # Configurações segurança através dos security groups
-│   ├── variables.tf         # Definição de variáveis
-│   ├── outputs.tf           # Outputs definidos
-│   └── provider.tf          # Configuração do provedor AWS
+│   ├── env/                 # Segrega configurações por ambiente
+│   ├── shared/              # Scripts que serão executados nos ambientes
+│       ├── backend.tf           # Configurações para sincronização do estado do terraform
+│       ├── bd.tf                # Configurações para criação da instância do banco de dados no AWS Aurora RDS
+│       ├── security-groups.tf   # Configurações segurança através dos security groups
+│       ├── variables.tf         # Definição de variáveis
+│       ├── outputs.tf           # Outputs definidos
+│       └── provider.tf          # Configuração do provedor AWS
 ├── setup.sh                 # Script para configuração do bucket S3 utilizado pelo terraform
 ```
 
@@ -86,7 +88,7 @@ Os scripts dependem da VPC que é criada à partir do [repositório de infra](ht
 ### Inicialize o Terraform
 
 ```bash
-terraform -chdir=terraform init
+terraform -chdir=terraform/env/dev init
 ```
 
 Este comando inicializa o diretório de trabalho do Terraform, baixa os provedores necessários e configura o backend S3.
@@ -94,7 +96,7 @@ Este comando inicializa o diretório de trabalho do Terraform, baixa os provedor
 ### Valide a configuração
 
 ```bash
-terraform -chdir=terraform validate
+terraform -chdir=terraform/env/dev validate
 ```
 
 Este comando verifica se a configuração está sintaticamente correta e internamente consistente.
@@ -102,7 +104,7 @@ Este comando verifica se a configuração está sintaticamente correta e interna
 ### Formate os scripts
 
 ```bash
-terraform -chdir=terraform fmt
+terraform -chdir=terraform/env/dev fmt
 ```
 
 Este comando organiza a formatação dos scripts nos arquivos padronizando principalmente a identação de código para deixá-lo mais legível.
@@ -110,7 +112,7 @@ Este comando organiza a formatação dos scripts nos arquivos padronizando princ
 ### Crie um plano de execução
 
 ```bash
-terraform -chdir=terraform plan -out=tfplan
+terraform -chdir=terraform/env/dev plan -out=tfplan
 ```
 
 ⚠ **Obs.:** Serão exigidas algumas informações como variáveis para execução dos scripts.
@@ -120,9 +122,9 @@ Este comando cria um plano de execução e salva no arquivo `tfplan`. Revise cui
 ### Aplique as alterações
 
 ```bash
-terraform -chdir=terraform apply tfplan
+terraform -chdir=terraform/env/dev apply tfplan
 # Para execução automática se ter necessidade de aprovação
-terraform -chdir=terraform apply tfplan -auto-approve
+terraform -chdir=terraform/env/dev apply tfplan -auto-approve
 ```
 
 Este comando aplica as alterações planejadas na infraestrutura AWS.
@@ -130,9 +132,9 @@ Este comando aplica as alterações planejadas na infraestrutura AWS.
 ### Destrua a infraestrutura (quando necessário)
 
 ```bash
-terraform -chdir=terraform destroy  
+terraform -chdir=terraform/env/dev destroy  
 # Para execução automática se ter necessidade de aprovação
-terraform -chdir=terraform destroy -auto-approve
+terraform -chdir=terraform/env/dev destroy -auto-approve
 ```
 
 Este comando remove todos os recursos criados pelo Terraform. Use com cautela, apenas quando realmente necessário.
