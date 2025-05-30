@@ -2,7 +2,15 @@ name: "Criação de Infraestrutura básica para as aplicações"
 on:
   push:
     branches: [main, develop]
+    paths:
+      - 'database/**'
+      - 'terraform/**'
   pull_request:
+    branches: 
+      - main
+    paths:
+      - 'database/**'
+      - 'terraform/**'
 permissions:
     issues: write
     pull-requests: write
